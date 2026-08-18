@@ -1,21 +1,17 @@
 import React, { useState } from 'react'
 import { 
-  Download, Loader2, Sparkles, Instagram, Youtube, PlayCircle, 
+  Download, Loader2, Sparkles, Instagram, Youtube, 
   AlertCircle, CheckCircle2, HelpCircle, Mail, MessageCircleQuestion, X
 } from 'lucide-react'
 
 export default function App() {
-  // Active mode: 'instagram' | 'youtube'
-  const [activeTab, setActiveTab] = useState('instagram')
-  
+  const [activeTab, setActiveTab] = useState('instagram') // 'instagram' | 'youtube'
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
   const [downloading, setDownloading] = useState(false)
-  
-  // Modal states: 'faq' | 'contact' | 'guide' | null
-  const [activeModal, setActiveModal] = useState(null)
+  const [activeModal, setActiveModal] = useState(null) // 'faq' | 'contact' | 'guide' | null
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab)
@@ -85,7 +81,7 @@ export default function App() {
       
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Top Switchable Mode Tabs */}
+        {/* Switchable Top Mode Tabs */}
         <div style={{
           display: 'flex',
           maxWidth: '440px',
@@ -97,7 +93,6 @@ export default function App() {
           marginBottom: '28px',
           boxSizing: 'border-box'
         }}>
-          {/* Instagram Tab */}
           <button
             onClick={() => handleTabSwitch('instagram')}
             style={{
@@ -124,7 +119,6 @@ export default function App() {
             <span>INSTAGRAM</span>
           </button>
 
-          {/* YouTube Tab */}
           <button
             onClick={() => handleTabSwitch('youtube')}
             style={{
@@ -152,7 +146,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* Dynamic Header */}
+        {/* Dynamic Title Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             display: 'inline-flex',
@@ -203,7 +197,6 @@ export default function App() {
           boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
           boxSizing: 'border-box'
         }}>
-          
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
@@ -259,7 +252,6 @@ export default function App() {
             </button>
           </form>
 
-          {/* Error Banner */}
           {error && (
             <div style={{
               marginTop: '16px',
@@ -303,7 +295,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Video Output & Download Section */}
+        {/* Video Preview & Download Area */}
         {result && (
           <div style={{
             marginTop: '20px',
@@ -324,7 +316,6 @@ export default function App() {
               <CheckCircle2 size={16} /> Video Found!
             </div>
 
-            {/* Video Player */}
             <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '320px' }}>
               <video
                 src={result.video_url}
@@ -348,7 +339,6 @@ export default function App() {
               {result.title || (activeTab === 'instagram' ? 'Instagram Reel' : 'YouTube Video')}
             </p>
 
-            {/* Download Button */}
             <button
               onClick={handleDownloadFile}
               disabled={downloading}
@@ -424,7 +414,7 @@ export default function App() {
         </div>
 
         <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>
-          Media Downloader • Secure & Free Multi-Platform Tool
+          Media Downloader • Free & Unlimited Cloud Downloader
         </p>
       </footer>
 
@@ -467,9 +457,9 @@ export default function App() {
 
             {activeModal === 'guide' && (
               <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div><strong>1. Copy Link:</strong> Copy any public Instagram Reel or YouTube video/shorts URL.</div>
-                <div><strong>2. Paste & Fetch:</strong> Select the matching tab above, paste your URL, and tap <em>Fetch</em>.</div>
-                <div><strong>3. Save Video:</strong> Preview the video and tap <em>Download MP4 Video</em>.</div>
+                <div><strong>1. Choose Platform:</strong> Tap <em>INSTAGRAM</em> or <em>YOUTUBE</em> at the top.</div>
+                <div><strong>2. Paste & Fetch:</strong> Paste your video/Shorts/Reel link and tap <em>Fetch</em>.</div>
+                <div><strong>3. Save Video:</strong> Check the preview and tap <em>Download MP4 Video</em>.</div>
               </div>
             )}
 
@@ -481,7 +471,7 @@ export default function App() {
                 </div>
                 <div>
                   <strong style={{ color: '#fff' }}>Is it completely free?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Yes, unlimited downloads without registration.</p>
+                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Yes, unlimited downloads with no sign-up required.</p>
                 </div>
               </div>
             )}
@@ -507,4 +497,16 @@ export default function App() {
                     background: '#334155',
                     border: 'none',
                     color: '#fff',
-                    fo
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+   

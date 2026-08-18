@@ -77,7 +77,7 @@ export default function App() {
       
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Top Switchable Tabs */}
+        {/* Switchable Top Mode Tabs */}
         <div style={{
           display: 'flex',
           maxWidth: '440px',
@@ -142,7 +142,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* Dynamic Title Header */}
+        {/* Dynamic Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             display: 'inline-flex',
@@ -181,7 +181,7 @@ export default function App() {
           </p>
         </div>
 
-        {/* Input Card */}
+        {/* Form Card */}
         <div style={{
           maxWidth: '460px',
           width: '100%',
@@ -472,4 +472,4 @@ export default function App() {
             {activeModal === 'faq' && (
               <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <strong style={{ color: '#fff' }}>What formats are supporte
+                  <strong style={{ color: '#fff' }}>What formats are supported?

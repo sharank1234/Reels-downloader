@@ -5,7 +5,7 @@ import yt_dlp
 
 app = FastAPI()
 
-# Allow frontend requests from all domains (Vercel)
+# Allow frontend requests from all domains
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,12 +28,18 @@ def download_media(req: DownloadRequest):
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True,
+        # Bypass bot detection on cloud servers by using mobile/embedded clients
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'tv_embedded']
+            }
+        }
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(req.url, download=False)
             
-            # Extract highest quality direct video URL
+            # Extract video URL
             video_url = info.get('url')
             if not video_url and 'formats' in info:
                 for f in reversed(info['formats']):
@@ -54,4 +60,3 @@ def download_media(req: DownloadRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-        

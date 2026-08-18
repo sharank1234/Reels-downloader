@@ -2,10 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import yt_dlp
+import re
 
 app = FastAPI()
 
-# Allow frontend requests from all domains (Vercel)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,45 +23,53 @@ def read_root():
 
 @app.post("/api/download")
 def download_media(req: DownloadRequest):
-    ydl_opts = {
-        'format': 'best[ext=mp4]/best',
-        'quiet': True,
-        'no_warnings': True,
-        'noplaylist': True,
-        # Bypass data-center bot verification
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'mweb', 'ios', 'tv_embedded'],
-                'player_skip': ['webpage', 'configs'],
-            }
-        },
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
-        }
-    }
+    url = req.url.strip()
     
+    # Check if URL is YouTube or Instagram
+    is_youtube = bool(re.search(r'(youtube\.com|youtu\.be)', url))
+    
+    if is_youtube:
+        ydl_opts = {
+            'format': 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
+            'quiet': True,
+            'no_warnings': True,
+            'noplaylist': True,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android_vr', 'android', 'ios'],
+                    'player_skip': ['webpage', 'configs', 'js'],
+                }
+            },
+            'http_headers': {
+                'User-Agent': 'com.google.android.apps.youtube.vr/1.37.21 (Linux; U; Android 10; Quest 2) gzip',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+        }
+    else:
+        # Standard configuration for Instagram Reels
+        ydl_opts = {
+            'format': 'best[ext=mp4]/best',
+            'quiet': True,
+            'no_warnings': True,
+        }
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(req.url, download=False)
+            info = ydl.extract_info(url, download=False)
             
-            # Find the best playable stream URL
             video_url = info.get('url')
             if not video_url and 'formats' in info:
-                # Prefer formats that contain both video and audio
+                # Find the direct MP4 format
                 for f in reversed(info['formats']):
-                    if f.get('vcodec') != 'none' and f.get('acodec') != 'none':
+                    if f.get('vcodec') != 'none' and f.get('url'):
                         video_url = f.get('url')
                         break
-                # Fallback to the last available stream
-                if not video_url and info['formats']:
-                    video_url = info['formats'][-1].get('url')
 
             thumbnail = info.get('thumbnail')
             title = info.get('title', 'Media Video')
 
             if not video_url:
-                raise HTTPException(status_code=400, detail="Could not extract direct stream URL.")
+                raise HTTPException(status_code=400, detail="Could not extract video link.")
 
             return {
                 "video_url": video_url,
@@ -69,7 +77,4 @@ def download_media(req: DownloadRequest):
                 "title": title
             }
     except Exception as e:
-        error_msg = str(e)
-        if "Sign in to confirm" in error_msg:
-            error_msg = "YouTube temporarily limited this video on the server. Please retry in a few seconds or try another link."
-        raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=400, detail=f"Download Error: {str(e)}")

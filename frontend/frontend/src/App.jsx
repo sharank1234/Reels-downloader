@@ -9,6 +9,8 @@ export default function App() {
   const [downloading, setDownloading] = useState(false)
   const [activeModal, setActiveModal] = useState(null)
 
+  const apiUrl = import.meta.env.VITE_API_URL || ''
+
   const handleTabSwitch = (tab) => {
     setActiveTab(tab)
     setUrl('')
@@ -21,7 +23,7 @@ export default function App() {
     setLoading(true)
     setError('')
     setResult(null)
-    const apiUrl = import.meta.env.VITE_API_URL || ''
+
     try {
       const res = await fetch(`${apiUrl}/api/download`, {
         method: 'POST',
@@ -38,12 +40,22 @@ export default function App() {
     }
   }
 
+  const getMediaSource = () => {
+    if (!result?.media_url) return ''
+    if (result.media_type === 'image') {
+      return `${apiUrl}/api/proxy-image?img_url=${encodeURIComponent(result.media_url)}`
+    }
+    return result.media_url
+  }
+
   const handleDownload = async () => {
     if (!result?.media_url) return
     setDownloading(true)
     const isImage = result.media_type === 'image'
+    const downloadSrc = getMediaSource()
+
     try {
-      const res = await fetch(result.media_url)
+      const res = await fetch(downloadSrc)
       const blob = await res.blob()
       const blobUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -54,7 +66,7 @@ export default function App() {
       document.body.removeChild(a)
       window.URL.revokeObjectURL(blobUrl)
     } catch {
-      window.open(result.media_url, '_blank')
+      window.open(downloadSrc, '_blank')
     } finally {
       setDownloading(false)
     }
@@ -80,7 +92,7 @@ export default function App() {
           </p>
         </div>
 
-        {/* Input Card */}
+        {/* Input Form */}
         <div style={{ width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px', boxSizing: 'border-box' }}>
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input 
@@ -110,17 +122,15 @@ export default function App() {
           </div>
         )}
 
-        {/* Media Preview & Download (With referrerPolicy to fix image blocking) */}
+        {/* Media Preview & Download Area */}
         {result && (
           <div style={{ marginTop: '20px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
             <div style={{ color: '#4ade80', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>✓ Ready for Download</div>
             
             {result.media_type === 'image' ? (
               <img 
-                src={result.media_url} 
+                src={getMediaSource()} 
                 alt="Instagram Post" 
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
                 style={{ width: '100%', maxHeight: '380px', objectFit: 'cover', borderRadius: '14px', backgroundColor: '#0f172a' }} 
               />
             ) : (
@@ -149,7 +159,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Instagram Information & Visual Instructions Section */}
+        {/* Instructions Section */}
         {activeTab === 'instagram' && (
           <div style={{ marginTop: '28px', width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
             
@@ -212,7 +222,7 @@ export default function App() {
 
       </div>
 
-      {/* Footer Modal Controls */}
+      {/* Footer Navigation */}
       <footer style={{ marginTop: '30px', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
         <div style={{ display: 'flex', gap: '14px', background: 'rgba(15,23,42,0.6)', padding: '6px 16px', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' }}>
           <button onClick={() => setActiveModal('guide')} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer' }}>📖 Guide</button>

@@ -27,36 +27,42 @@ def download_media(req: DownloadRequest):
     url = req.url.strip()
     is_youtube = bool(re.search(r'(youtube\.com|youtu\.be)', url))
 
-    # ENGINE 1: YouTube Resolver (Bypasses Data-Center IP Blocks)
+    # --- YouTube Gateway (Bypasses Cloud Bot Detection) ---
     if is_youtube:
-        try:
-            # Using public cobalt instance for YouTube streaming bypass
-            res = requests.post(
-                "https://api.cobalt.tools/api/json",
-                headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "url": url,
-                    "vQuality": "720",
-                    "filenamePattern": "basic"
-                },
-                timeout=12
-            )
-            
-            data = res.json()
-            if res.status_code == 200 and ("url" in data or "stream" in data):
-                stream_url = data.get("url") or data.get("stream")
-                return {
-                    "video_url": stream_url,
-                    "thumbnail": "",
-                    "title": "YouTube Video"
-                }
-        except Exception:
-            pass  # Fallback to local yt-dlp if external gateway is busy
+        gateways = [
+            "https://co.wuk.sh/api/json",
+            "https://api.cobalt.tools/api/json"
+        ]
+        
+        for gw in gateways:
+            try:
+                response = requests.post(
+                    gw,
+                    headers={
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                    },
+                    json={
+                        "url": url,
+                        "vQuality": "720",
+                        "filenamePattern": "basic"
+                    },
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    stream_url = data.get("url") or data.get("stream")
+                    if stream_url:
+                        return {
+                            "video_url": stream_url,
+                            "thumbnail": "",
+                            "title": "YouTube Video"
+                        }
+            except Exception:
+                continue
 
-    # ENGINE 2: yt-dlp (Native Engine for Instagram Reels & Fallback)
+    # --- Instagram Engine & Fallback (yt-dlp) ---
     ydl_opts = {
         'format': 'best[ext=mp4]/best',
         'quiet': True,
@@ -68,7 +74,7 @@ def download_media(req: DownloadRequest):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             video_url = info.get('url')
-            
+
             if not video_url and 'formats' in info:
                 for f in reversed(info['formats']):
                     if f.get('vcodec') != 'none' and f.get('url'):
@@ -85,3 +91,4 @@ def download_media(req: DownloadRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+        

@@ -27,83 +27,79 @@ def download_media(req: DownloadRequest):
     url = req.url.strip()
     is_youtube = bool(re.search(r'(youtube\.com|youtu\.be)', url))
 
-    # --- 1. YOUTUBE ENGINE (Multi-Mirror Stream Resolver) ---
+    # ==========================================
+    # 1. YOUTUBE ENGINE (InnerTube Mobile API)
+    # ==========================================
     if is_youtube:
+        # Extract 11-character video ID
         vid_match = re.search(r'(?:v=|\/|shorts\/|youtu\.be\/)([0-9A-Za-z_-]{11})', url)
         if not vid_match:
-            raise HTTPException(status_code=400, detail="Invalid YouTube link format.")
+            raise HTTPException(status_code=400, detail="Invalid YouTube URL format.")
         
         video_id = vid_match.group(1)
-        clean_url = f"https://www.youtube.com/watch?v={video_id}"
 
-        # Method A: Cobalt Modern V10 Endpoints
-        cobalt_endpoints = [
-            "https://api.cobalt.tools",
-            "https://cobalt.api.kwiatekm.tokyo",
-            "https://cobalt-api.hyper.lol"
-        ]
-        for ep in cobalt_endpoints:
-            try:
-                res = requests.post(
-                    ep,
-                    headers={
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
-                    },
-                    json={"url": clean_url},
-                    timeout=5
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    stream_url = data.get("url") or data.get("stream")
-                    if stream_url:
-                        return {
-                            "video_url": stream_url,
-                            "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
-                            "title": "YouTube Video"
-                        }
-            except Exception:
-                continue
+        # Query YouTube InnerTube Android endpoint directly
+        innertube_url = "https://www.youtube.com/youtubei/v1/player"
+        payload = {
+            "context": {
+                "client": {
+                    "clientName": "ANDROID",
+                    "clientVersion": "19.09.37",
+                    "androidSdkVersion": 30,
+                    "hl": "en",
+                    "gl": "US"
+                }
+            },
+            "videoId": video_id
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "com.google.android.youtube/19.09.37 (Linux; U; Android 11)"
+        }
 
-        # Method B: Piped & Invidious Direct Stream Mirrors
-        stream_mirrors = [
-            f"https://pipedapi.kavin.rocks/streams/{video_id}",
-            f"https://api.piped.privacy.com.de/streams/{video_id}",
-            f"https://invidious.nerdvpn.de/api/v1/videos/{video_id}",
-            f"https://invidious.jing.rocks/api/v1/videos/{video_id}"
-        ]
-        for mirror in stream_mirrors:
-            try:
-                res = requests.get(mirror, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
-                if res.status_code == 200:
-                    data = res.json()
-                    
-                    # Piped format check
-                    video_streams = data.get("videoStreams", [])
-                    for stream in reversed(video_streams):
-                        if stream.get("url") and stream.get("format") == "MPEG_4" and not stream.get("videoOnly"):
-                            return {
-                                "video_url": stream.get("url"),
-                                "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
-                                "title": data.get("title", "YouTube Video")
-                            }
-                    
-                    # Invidious format check
-                    format_streams = data.get("formatStreams", [])
-                    if format_streams:
-                        return {
-                            "video_url": format_streams[-1].get("url"),
-                            "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
-                            "title": data.get("title", "YouTube Video")
-                        }
-            except Exception:
-                continue
+        try:
+            res = requests.post(innertube_url, json=payload, headers=headers, timeout=10)
+            if res.status_code == 200:
+                data = res.json()
+                streaming_data = data.get("streamingData", {})
+                
+                # Try combined formats first (video + audio in one MP4)
+                formats = streaming_data.get("formats", [])
+                video_url = None
+                for f in reversed(formats):
+                    if f.get("url") and "video/mp4" in f.get("mimeType", ""):
+                        video_url = f.get("url")
+                        break
 
-        raise HTTPException(status_code=400, detail="Unable to extract YouTube video. Please try again.")
+                # Fallback to adaptive streams if formats list is empty
+                if not video_url:
+                    adaptive = streaming_data.get("adaptiveFormats", [])
+                    for f in adaptive:
+                        if f.get("url") and "video/mp4" in f.get("mimeType", ""):
+                            video_url = f.get("url")
+                            break
+                    if not video_url and formats:
+                        video_url = formats[0].get("url")
 
-    # --- 2. INSTAGRAM ENGINE (yt-dlp) ---
+                title = data.get("videoDetails", {}).get("title", "YouTube Video")
+                thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+
+                if video_url:
+                    return {
+                        "video_url": video_url,
+                        "thumbnail": thumbnail,
+                        "title": title
+                    }
+        except Exception as e:
+            pass
+
+        raise HTTPException(status_code=400, detail="Unable to retrieve YouTube stream. Please check the URL.")
+
+    # ==========================================
+    # 2. INSTAGRAM ENGINE (yt-dlp)
+    # ==========================================
     ydl_opts = {
-        'format': 'best',
+        'format': 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
         'noplaylist': True
@@ -130,3 +126,4 @@ def download_media(req: DownloadRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+        

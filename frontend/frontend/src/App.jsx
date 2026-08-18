@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { 
-  Download, Loader2, Sparkles, Instagram, 
+  Download, Loader2, Sparkles, Instagram, Youtube, PlayCircle, 
   AlertCircle, CheckCircle2, HelpCircle, Mail, MessageCircleQuestion, X
 } from 'lucide-react'
 
 export default function App() {
+  // Active mode: 'instagram' | 'youtube'
+  const [activeTab, setActiveTab] = useState('instagram')
+  
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
@@ -13,6 +16,13 @@ export default function App() {
   
   // Modal states: 'faq' | 'contact' | 'guide' | null
   const [activeModal, setActiveModal] = useState(null)
+
+  const handleTabSwitch = (tab) => {
+    setActiveTab(tab)
+    setUrl('')
+    setResult(null)
+    setError('')
+  }
 
   const handleFetch = async (e) => {
     e.preventDefault()
@@ -47,13 +57,12 @@ export default function App() {
       const blobUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl
-      a.download = `${result.title || 'instagram_reel'}.mp4`
+      a.download = `${result.title || (activeTab === 'instagram' ? 'instagram_reel' : 'youtube_video')}.mp4`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(blobUrl)
     } catch (err) {
-      // Fallback if CORS blocks blob download
       window.open(result.video_url, '_blank')
     } finally {
       setDownloading(false)
@@ -69,16 +78,82 @@ export default function App() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '32px 16px 20px 16px',
+      padding: '24px 16px 20px 16px',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       boxSizing: 'border-box'
     }}>
       
-      {/* Header & Main Form Area */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Glow Header */}
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        {/* Top Switchable Mode Tabs */}
+        <div style={{
+          display: 'flex',
+          maxWidth: '440px',
+          width: '100%',
+          background: 'rgba(15, 23, 42, 0.8)',
+          borderRadius: '16px',
+          padding: '4px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          marginBottom: '28px',
+          boxSizing: 'border-box'
+        }}>
+          {/* Instagram Tab */}
+          <button
+            onClick={() => handleTabSwitch('instagram')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'instagram' 
+                ? 'linear-gradient(135deg, #FF543E 0%, #FF2578 50%, #C92BEA 100%)' 
+                : 'transparent',
+              color: activeTab === 'instagram' ? '#ffffff' : '#94a3b8',
+              boxShadow: activeTab === 'instagram' ? '0 4px 15px rgba(255, 37, 120, 0.4)' : 'none'
+            }}
+          >
+            <Instagram size={18} />
+            <span>INSTAGRAM</span>
+          </button>
+
+          {/* YouTube Tab */}
+          <button
+            onClick={() => handleTabSwitch('youtube')}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 700,
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              background: activeTab === 'youtube' 
+                ? 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)' 
+                : 'transparent',
+              color: activeTab === 'youtube' ? '#ffffff' : '#94a3b8',
+              boxShadow: activeTab === 'youtube' ? '0 4px 15px rgba(255, 0, 0, 0.4)' : 'none'
+            }}
+          >
+            <Youtube size={18} />
+            <span>YOUTUBE</span>
+          </button>
+        </div>
+
+        {/* Dynamic Header */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -90,45 +165,50 @@ export default function App() {
             fontSize: '13px',
             fontWeight: 600,
             letterSpacing: '0.5px',
-            marginBottom: '14px',
-            color: '#fb7185'
+            marginBottom: '12px',
+            color: activeTab === 'instagram' ? '#fb7185' : '#f87171'
           }}>
             <Sparkles size={16} /> FAST & HIGH QUALITY
           </div>
 
           <h1 style={{
-            fontSize: '36px',
+            fontSize: '34px',
             fontWeight: 900,
             letterSpacing: '-1px',
-            background: 'linear-gradient(135deg, #FF543E 0%, #FF2578 50%, #C92BEA 100%)',
+            background: activeTab === 'instagram'
+              ? 'linear-gradient(135deg, #FF543E 0%, #FF2578 50%, #C92BEA 100%)'
+              : 'linear-gradient(135deg, #FF4B4B 0%, #FF0000 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             margin: '0 0 8px 0'
           }}>
-            Reels Downloader
+            {activeTab === 'instagram' ? 'Reels Downloader' : 'YouTube Downloader'}
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '14px', maxWidth: '380px', margin: '0 auto', lineHeight: '1.5' }}>
-            Paste any public Instagram Reel URL to fetch & download original MP4 video.
+            {activeTab === 'instagram' 
+              ? 'Paste any public Instagram Reel URL to fetch & download original MP4 video.'
+              : 'Paste any YouTube video or Shorts link to fetch & download in high quality.'}
           </p>
         </div>
 
-        {/* Form Card */}
+        {/* Input Card */}
         <div style={{
-          maxWidth: '480px',
+          maxWidth: '460px',
           width: '100%',
           background: 'rgba(30, 41, 59, 0.75)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
           borderRadius: '24px',
           padding: '24px 20px',
-          boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6)'
+          boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
+          boxSizing: 'border-box'
         }}>
           
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
                 type="text"
-                placeholder="Paste Instagram Reel URL..."
+                placeholder={activeTab === 'instagram' ? 'Paste Instagram Reel URL...' : 'Paste YouTube or Shorts URL...'}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 required
@@ -144,7 +224,11 @@ export default function App() {
                   boxSizing: 'border-box'
                 }}
               />
-              <Instagram size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#f43f5e' }} />
+              {activeTab === 'instagram' ? (
+                <Instagram size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#f43f5e' }} />
+              ) : (
+                <Youtube size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#ef4444' }} />
+              )}
             </div>
 
             <button
@@ -154,7 +238,9 @@ export default function App() {
                 padding: '14px 20px',
                 borderRadius: '14px',
                 border: 'none',
-                background: 'linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%)',
+                background: activeTab === 'instagram'
+                  ? 'linear-gradient(90deg, #ec4899 0%, #8b5cf6 100%)'
+                  : 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)',
                 color: '#ffffff',
                 fontWeight: 700,
                 fontSize: '15px',
@@ -163,11 +249,13 @@ export default function App() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '10px',
-                boxShadow: '0 10px 20px -5px rgba(236, 72, 153, 0.4)'
+                boxShadow: activeTab === 'instagram' 
+                  ? '0 10px 20px -5px rgba(236, 72, 153, 0.4)' 
+                  : '0 10px 20px -5px rgba(239, 68, 68, 0.4)'
               }}
             >
               {loading ? <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={20} /> : <Download size={20} />}
-              {loading ? 'Processing Video...' : 'Fetch Reel'}
+              {loading ? 'Processing Video...' : `Fetch ${activeTab === 'instagram' ? 'Reel' : 'Video'}`}
             </button>
           </form>
 
@@ -191,11 +279,11 @@ export default function App() {
           )}
         </div>
 
-        {/* LOADING STATE in marked area */}
+        {/* Loading Spinner Area */}
         {loading && (
           <div style={{
             marginTop: '20px',
-            maxWidth: '480px',
+            maxWidth: '460px',
             width: '100%',
             background: 'rgba(30, 41, 59, 0.5)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -209,17 +297,17 @@ export default function App() {
             textAlign: 'center',
             boxSizing: 'border-box'
           }}>
-            <Loader2 size={36} color="#ec4899" style={{ animation: 'spin 1s linear infinite' }} />
-            <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 600 }}>Fetching video from Instagram...</span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Please wait a few seconds</span>
+            <Loader2 size={36} color={activeTab === 'instagram' ? '#ec4899' : '#ef4444'} style={{ animation: 'spin 1s linear infinite' }} />
+            <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 600 }}>Fetching video details...</span>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Please wait a moment</span>
           </div>
         )}
 
-        {/* VIDEO DISPLAY & DOWNLOAD AREA (Marked area) */}
+        {/* Video Output & Download Section */}
         {result && (
           <div style={{
             marginTop: '20px',
-            maxWidth: '480px',
+            maxWidth: '460px',
             width: '100%',
             background: 'rgba(30, 41, 59, 0.75)',
             backdropFilter: 'blur(20px)',
@@ -237,13 +325,13 @@ export default function App() {
             </div>
 
             {/* Video Player */}
-            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '340px' }}>
+            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '320px' }}>
               <video
                 src={result.video_url}
                 poster={result.thumbnail}
                 controls
                 playsInline
-                style={{ width: '100%', maxHeight: '340px', objectFit: 'contain' }}
+                style={{ width: '100%', maxHeight: '320px', objectFit: 'contain' }}
               />
             </div>
 
@@ -257,10 +345,10 @@ export default function App() {
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}>
-              {result.title || 'Instagram Reel'}
+              {result.title || (activeTab === 'instagram' ? 'Instagram Reel' : 'YouTube Video')}
             </p>
 
-            {/* Direct Download Action Button */}
+            {/* Download Button */}
             <button
               onClick={handleDownloadFile}
               disabled={downloading}
@@ -288,7 +376,7 @@ export default function App() {
 
       </div>
 
-      {/* Accessible Footer Help Tools */}
+      {/* Accessible Footer Bar */}
       <footer style={{
         marginTop: '36px',
         width: '100%',
@@ -311,18 +399,7 @@ export default function App() {
         }}>
           <button
             onClick={() => setActiveModal('guide')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#cbd5e1',
-              fontSize: '13px',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              padding: '4px 8px'
-            }}
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
             <HelpCircle size={15} color="#38bdf8" /> How to use
           </button>
@@ -331,18 +408,7 @@ export default function App() {
 
           <button
             onClick={() => setActiveModal('faq')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#cbd5e1',
-              fontSize: '13px',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              padding: '4px 8px'
-            }}
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
             <MessageCircleQuestion size={15} color="#a78bfa" /> FAQ
           </button>
@@ -351,29 +417,18 @@ export default function App() {
 
           <button
             onClick={() => setActiveModal('contact')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#cbd5e1',
-              fontSize: '13px',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              padding: '4px 8px'
-            }}
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
             <Mail size={15} color="#f43f5e" /> Contact Support
           </button>
         </div>
 
         <p style={{ color: '#64748b', fontSize: '12px', margin: 0 }}>
-          Reels Downloader • Secure & Free Tool
+          Media Downloader • Secure & Free Multi-Platform Tool
         </p>
       </footer>
 
-      {/* Interactive Modals */}
+      {/* Accessible Modals */}
       {activeModal && (
         <div style={{
           position: 'fixed',
@@ -396,7 +451,6 @@ export default function App() {
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)',
             position: 'relative'
           }}>
-            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                 {activeModal === 'guide' && '📖 How to Download'}
@@ -413,25 +467,21 @@ export default function App() {
 
             {activeModal === 'guide' && (
               <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div><strong>1. Copy Reel URL:</strong> Open Instagram, tap the Share icon on any reel, and tap <em>Copy link</em>.</div>
-                <div><strong>2. Paste & Fetch:</strong> Paste the link in the input box above and tap <em>Fetch Reel</em>.</div>
-                <div><strong>3. Preview & Save:</strong> Watch the preview and tap <em>Download MP4 Video</em> to save it to your device.</div>
+                <div><strong>1. Copy Link:</strong> Copy any public Instagram Reel or YouTube video/shorts URL.</div>
+                <div><strong>2. Paste & Fetch:</strong> Select the matching tab above, paste your URL, and tap <em>Fetch</em>.</div>
+                <div><strong>3. Save Video:</strong> Preview the video and tap <em>Download MP4 Video</em>.</div>
               </div>
             )}
 
             {activeModal === 'faq' && (
               <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <strong style={{ color: '#fff' }}>Does this work with private accounts?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>No, only public Instagram Reels can be fetched.</p>
+                  <strong style={{ color: '#fff' }}>What formats are supported?</strong>
+                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Instagram Reels, YouTube regular videos, and YouTube Shorts.</p>
                 </div>
                 <div>
-                  <strong style={{ color: '#fff' }}>Is there a download limit?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>No limits. It is 100% free and unlimited.</p>
-                </div>
-                <div>
-                  <strong style={{ color: '#fff' }}>Where are the files saved?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Directly to your phone gallery or computer Downloads folder.</p>
+                  <strong style={{ color: '#fff' }}>Is it completely free?</strong>
+                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Yes, unlimited downloads without registration.</p>
                 </div>
               </div>
             )}
@@ -457,27 +507,4 @@ export default function App() {
                     background: '#334155',
                     border: 'none',
                     color: '#fff',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* Global CSS for spinner animation */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-
-    </div>
-  )
-}
+                    fo

@@ -66,20 +66,24 @@ export default function App() {
         {/* Platform Switcher */}
         <div style={{ display: 'flex', maxWidth: '420px', width: '100%', background: 'rgba(15,23,42,0.8)', borderRadius: '16px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px', boxSizing: 'border-box' }}>
           <button onClick={() => handleTabSwitch('instagram')} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, background: activeTab === 'instagram' ? 'linear-gradient(135deg, #FF543E 0%, #FF2578 50%, #C92BEA 100%)' : 'transparent', color: '#fff' }}>INSTAGRAM</button>
-          <button onClick={() => handleTabSwitch('youtube')} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, background: activeTab === 'youtube' ? 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)' : 'transparent', color: '#fff' }}>YOUTUBE</button>
+          <button onClick={() => handleTabSwitch('youtube')} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, background: activeTab === 'youtube' ? '#ef4444' : 'transparent', color: '#fff' }}>YOUTUBE</button>
         </div>
 
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 900, background: activeTab === 'instagram' ? 'linear-gradient(135deg, #FF543E, #C92BEA)' : 'linear-gradient(135deg, #FF4B4B, #FF0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 0 6px 0' }}>{activeTab === 'instagram' ? 'Reels Downloader' : 'YouTube Downloader'}</h1>
-          <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Paste public {activeTab === 'instagram' ? 'Instagram Reel' : 'YouTube Video/Shorts'} URL.</p>
+          <h1 style={{ fontSize: '30px', fontWeight: 900, color: activeTab === 'instagram' ? '#ff3b81' : '#f87171', margin: '0 0 6px 0', textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
+            {activeTab === 'instagram' ? 'Reels Downloader' : 'YouTube Downloader'}
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>
+            Paste public {activeTab === 'instagram' ? 'Instagram Reel' : 'YouTube Video/Shorts'} URL.
+          </p>
         </div>
 
         {/* Search Card */}
         <div style={{ maxWidth: '440px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px', boxSizing: 'border-box' }}>
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input type="text" placeholder={`Paste ${activeTab === 'instagram' ? 'Instagram Reel' : 'YouTube'} link...`} value={url} onChange={(e) => setUrl(e.target.value)} required style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} />
-            <button type="submit" disabled={loading} style={{ padding: '12px', borderRadius: '12px', border: 'none', background: activeTab === 'instagram' ? 'linear-gradient(90deg, #ec4899, #8b5cf6)' : 'linear-gradient(90deg, #ef4444, #b91c1c)', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Processing Video...' : 'Fetch Media'}</button>
+            <button type="submit" disabled={loading} style={{ padding: '12px', borderRadius: '12px', border: 'none', background: activeTab === 'instagram' ? 'linear-gradient(90deg, #ec4899, #8b5cf6)' : '#ef4444', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Processing Video...' : 'Fetch Media'}</button>
           </form>
           {error && <div style={{ marginTop: '12px', padding: '10px', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', fontSize: '13px', textAlign: 'center' }}>⚠️ {error}</div>}
         </div>

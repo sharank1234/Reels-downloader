@@ -64,7 +64,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'radial-gradient(circle at 10% 20%, rgba(131,58,180,0.35) 0%, rgba(253,29,29,0.2) 50%, rgba(252,176,69,0.15) 100%), #090d16', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px 40px', fontFamily: 'system-ui, sans-serif', boxSizing: 'border-box' }}>
       <div style={{ width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Platform Tabs */}
+        {/* Switchable Tabs */}
         <div style={{ display: 'flex', width: '100%', background: 'rgba(15,23,42,0.8)', borderRadius: '16px', padding: '4px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px', boxSizing: 'border-box' }}>
           <button onClick={() => handleTabSwitch('instagram')} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, background: activeTab === 'instagram' ? 'linear-gradient(135deg, #FF543E 0%, #FF2578 50%, #C92BEA 100%)' : 'transparent', color: '#fff' }}>INSTAGRAM</button>
           <button onClick={() => handleTabSwitch('youtube')} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 700, background: activeTab === 'youtube' ? '#ef4444' : 'transparent', color: '#fff' }}>YOUTUBE</button>
@@ -80,7 +80,7 @@ export default function App() {
           </p>
         </div>
 
-        {/* Input Box */}
+        {/* Input Card */}
         <div style={{ width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px', boxSizing: 'border-box' }}>
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <input 
@@ -102,7 +102,7 @@ export default function App() {
           {error && <div style={{ marginTop: '12px', padding: '10px', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', fontSize: '13px', textAlign: 'center' }}>⚠️ {error}</div>}
         </div>
 
-        {/* Loading Indicator */}
+        {/* Loading Spinner */}
         {loading && (
           <div style={{ marginTop: '20px', width: '100%', background: 'rgba(30, 41, 59, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '30px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', textAlign: 'center', boxSizing: 'border-box' }}>
             <div style={{ width: '32px', height: '32px', border: '3px solid rgba(255,255,255,0.1)', borderTop: `3px solid ${activeTab === 'instagram' ? '#ec4899' : '#ef4444'}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
@@ -110,15 +110,29 @@ export default function App() {
           </div>
         )}
 
-        {/* Video / Photo Preview & Download */}
+        {/* Media Preview & Download (With referrerPolicy to fix image blocking) */}
         {result && (
           <div style={{ marginTop: '20px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
             <div style={{ color: '#4ade80', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>✓ Ready for Download</div>
+            
             {result.media_type === 'image' ? (
-              <img src={result.media_url} alt="Instagram Post" style={{ width: '100%', maxHeight: '340px', objectFit: 'contain', borderRadius: '14px', backgroundColor: '#000' }} />
+              <img 
+                src={result.media_url} 
+                alt="Instagram Post" 
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+                style={{ width: '100%', maxHeight: '380px', objectFit: 'cover', borderRadius: '14px', backgroundColor: '#0f172a' }} 
+              />
             ) : (
-              <video src={result.media_url} poster={result.thumbnail} controls playsInline style={{ width: '100%', maxHeight: '340px', borderRadius: '14px', backgroundColor: '#000' }} />
+              <video 
+                src={result.media_url} 
+                poster={result.thumbnail} 
+                controls 
+                playsInline 
+                style={{ width: '100%', maxHeight: '380px', borderRadius: '14px', backgroundColor: '#000' }} 
+              />
             )}
+
             <button onClick={handleDownload} disabled={downloading} style={{ padding: '12px', borderRadius: '12px', border: 'none', background: 'linear-gradient(90deg, #10b981, #059669)', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: downloading ? 'not-allowed' : 'pointer' }}>
               {downloading ? 'Downloading...' : `Download ${result.media_type === 'image' ? 'JPG Photo' : 'MP4 Video'}`}
             </button>
@@ -139,7 +153,6 @@ export default function App() {
         {activeTab === 'instagram' && (
           <div style={{ marginTop: '28px', width: '100%', display: 'flex', flexDirection: 'column', gap: '18px' }}>
             
-            {/* Overview Card */}
             <div style={{ background: 'rgba(30, 41, 59, 0.65)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '18px', padding: '18px' }}>
               <h2 style={{ margin: '0 0 8px 0', fontSize: '17px', fontWeight: 800, color: '#ff3b81' }}>✨ Instagram Reels Video Download</h2>
               <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#cbd5e1', margin: '0 0 8px 0' }}>
@@ -150,7 +163,6 @@ export default function App() {
               </p>
             </div>
 
-            {/* Key Features */}
             <div style={{ background: 'rgba(30, 41, 59, 0.65)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '18px', padding: '18px' }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 800, color: '#fff' }}>⚡ Key Features of Instagram Reels Download</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -169,33 +181,27 @@ export default function App() {
               </div>
             </div>
 
-            {/* Visual Step Guide */}
             <div style={{ background: 'rgba(30, 41, 59, 0.65)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '18px', padding: '18px' }}>
               <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 800, color: '#fff' }}>📖 Ways to Download Instagram Reels Video</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                
                 <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '12px', padding: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: '#f472b6', marginBottom: '6px' }}>1. Reels to Download</div>
                   <div style={{ height: '60px', background: 'rgba(236,72,153,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '6px' }}>📲 ➔ 🔗</div>
                   <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>Open the IG app and copy your favourite Reels that you want to download. Click on the share icon and copy link.</p>
                 </div>
-
                 <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '12px', padding: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: '#38bdf8', marginBottom: '6px' }}>2. Reels Downloader</div>
                   <div style={{ height: '60px', background: 'rgba(56,189,248,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '6px' }}>📋 ➔ ⚡</div>
                   <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>Paste the link in the input box and click Fetch Media to process your request in seconds.</p>
                 </div>
-
                 <div style={{ background: 'rgba(15, 23, 42, 0.7)', borderRadius: '12px', padding: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: '#4ade80', marginBottom: '6px' }}>3. Save Instagram Reels</div>
                   <div style={{ height: '60px', background: 'rgba(74,222,128,0.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', marginBottom: '6px' }}>🎬 ➔ 💾</div>
                   <p style={{ fontSize: '12px', color: '#cbd5e1', margin: 0 }}>Click download to save the Reel directly into your downloads folder or phone gallery.</p>
                 </div>
-
               </div>
             </div>
 
-            {/* Watermark Section */}
             <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,78,59,0.25))', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '18px', padding: '16px' }}>
               <h3 style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: 800, color: '#4ade80' }}>🛡️ Download Instagram Reels Video without Watermark</h3>
               <p style={{ fontSize: '12px', lineHeight: '1.5', color: '#cbd5e1', margin: 0 }}>Seamlessly removes watermarks from downloaded videos, providing original high-quality clean MP4 files.</p>

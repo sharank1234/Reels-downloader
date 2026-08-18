@@ -82,31 +82,6 @@ export default function App() {
           </p>
         </div>
 
-        {/* Big Notice Banner for YouTube Mode */}
-        {activeTab === 'youtube' && (
-          <div style={{
-            maxWidth: '440px',
-            width: '100%',
-            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: '16px',
-            padding: '16px 18px',
-            marginBottom: '18px',
-            boxSizing: 'border-box',
-            boxShadow: '0 8px 24px -6px rgba(239, 68, 68, 0.25)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <span style={{ fontSize: '20px' }}>🚧</span>
-              <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#fca5a5', letterSpacing: '0.3px' }}>
-                UNDER ACTIVE DEVELOPMENT 🛠️
-              </h4>
-            </div>
-            <p style={{ margin: 0, fontSize: '12px', lineHeight: '1.6', color: '#fecaca' }}>
-              We're currently upgrading our cloud streaming pipelines to bypass data-center speed limits. YouTube downloads may be intermittent while our engineers cook up something faster! 🚀✨
-            </p>
-          </div>
-        )}
-
         {/* Input Card */}
         <div style={{ maxWidth: '440px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px', boxSizing: 'border-box' }}>
           <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -129,7 +104,7 @@ export default function App() {
           {error && <div style={{ marginTop: '12px', padding: '10px', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', fontSize: '13px', textAlign: 'center' }}>⚠️ {error}</div>}
         </div>
 
-        {/* Loading State */}
+        {/* Loading Spinner Area */}
         {loading && (
           <div style={{
             marginTop: '20px',
@@ -160,7 +135,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Video Preview & Download */}
+        {/* Video Preview & Download Area */}
         {result && (
           <div style={{ marginTop: '20px', maxWidth: '440px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
             <div style={{ color: '#4ade80', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>✓ Ready for Download</div>
@@ -178,6 +153,75 @@ export default function App() {
             >
               {downloading ? 'Downloading...' : 'Download MP4 Video'}
             </button>
+          </div>
+        )}
+
+        {/* MARKED AREA: Big Creative Under-Development Notice for YouTube */}
+        {activeTab === 'youtube' && !result && !loading && (
+          <div style={{
+            marginTop: '22px',
+            maxWidth: '440px',
+            width: '100%',
+            background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(20, 10, 20, 0.85) 100%)',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
+            borderRadius: '24px',
+            padding: '24px 20px',
+            boxSizing: 'border-box',
+            boxShadow: '0 15px 35px -10px rgba(239, 68, 68, 0.25)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '28px'
+            }}>
+              🚀
+            </div>
+
+            <h3 style={{
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 800,
+              color: '#fca5a5',
+              letterSpacing: '0.5px'
+            }}>
+              YouTube Engine In The Lab 🧪
+            </h3>
+
+            <p style={{
+              margin: 0,
+              fontSize: '13px',
+              lineHeight: '1.6',
+              color: '#cbd5e1'
+            }}>
+              We're currently building our next-generation lightning proxy pipeline to support 4K YouTube Shorts & Video ripping directly from the cloud. ⚡
+            </p>
+
+            <div style={{
+              marginTop: '4px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              borderRadius: '9999px',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#f87171'
+            }}>
+              <span>🛠️ Feature Releasing Very Soon</span>
+            </div>
           </div>
         )}
 

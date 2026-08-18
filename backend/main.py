@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import requests
 import yt_dlp
 import re
 
@@ -24,57 +25,63 @@ def read_root():
 @app.post("/api/download")
 def download_media(req: DownloadRequest):
     url = req.url.strip()
-    
-    # Check if URL is YouTube or Instagram
     is_youtube = bool(re.search(r'(youtube\.com|youtu\.be)', url))
-    
+
+    # ENGINE 1: YouTube Resolver (Bypasses Data-Center IP Blocks)
     if is_youtube:
-        ydl_opts = {
-            'format': 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
-            'quiet': True,
-            'no_warnings': True,
-            'noplaylist': True,
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android_vr', 'android', 'ios'],
-                    'player_skip': ['webpage', 'configs', 'js'],
+        try:
+            # Using public cobalt instance for YouTube streaming bypass
+            res = requests.post(
+                "https://api.cobalt.tools/api/json",
+                headers={
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "url": url,
+                    "vQuality": "720",
+                    "filenamePattern": "basic"
+                },
+                timeout=12
+            )
+            
+            data = res.json()
+            if res.status_code == 200 and ("url" in data or "stream" in data):
+                stream_url = data.get("url") or data.get("stream")
+                return {
+                    "video_url": stream_url,
+                    "thumbnail": "",
+                    "title": "YouTube Video"
                 }
-            },
-            'http_headers': {
-                'User-Agent': 'com.google.android.apps.youtube.vr/1.37.21 (Linux; U; Android 10; Quest 2) gzip',
-                'Accept-Language': 'en-US,en;q=0.9',
-            }
-        }
-    else:
-        # Standard configuration for Instagram Reels
-        ydl_opts = {
-            'format': 'best[ext=mp4]/best',
-            'quiet': True,
-            'no_warnings': True,
-        }
+        except Exception:
+            pass  # Fallback to local yt-dlp if external gateway is busy
+
+    # ENGINE 2: yt-dlp (Native Engine for Instagram Reels & Fallback)
+    ydl_opts = {
+        'format': 'best[ext=mp4]/best',
+        'quiet': True,
+        'no_warnings': True,
+        'noplaylist': True
+    }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            
             video_url = info.get('url')
+            
             if not video_url and 'formats' in info:
-                # Find the direct MP4 format
                 for f in reversed(info['formats']):
                     if f.get('vcodec') != 'none' and f.get('url'):
                         video_url = f.get('url')
                         break
 
-            thumbnail = info.get('thumbnail')
-            title = info.get('title', 'Media Video')
-
             if not video_url:
-                raise HTTPException(status_code=400, detail="Could not extract video link.")
+                raise HTTPException(status_code=400, detail="Unable to extract video stream.")
 
             return {
                 "video_url": video_url,
-                "thumbnail": thumbnail,
-                "title": title
+                "thumbnail": info.get('thumbnail', ''),
+                "title": info.get('title', 'Media Video')
             }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Download Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))

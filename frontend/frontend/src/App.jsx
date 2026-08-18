@@ -1,8 +1,4 @@
 import React, { useState } from 'react'
-import { 
-  Download, Loader2, Sparkles, Instagram, Youtube, 
-  AlertCircle, CheckCircle2, HelpCircle, Mail, MessageCircleQuestion, X
-} from 'lucide-react'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('instagram') // 'instagram' | 'youtube'
@@ -81,7 +77,7 @@ export default function App() {
       
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
-        {/* Switchable Top Mode Tabs */}
+        {/* Top Switchable Tabs */}
         <div style={{
           display: 'flex',
           maxWidth: '440px',
@@ -115,7 +111,7 @@ export default function App() {
               boxShadow: activeTab === 'instagram' ? '0 4px 15px rgba(255, 37, 120, 0.4)' : 'none'
             }}
           >
-            <Instagram size={18} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
             <span>INSTAGRAM</span>
           </button>
 
@@ -141,7 +137,7 @@ export default function App() {
               boxShadow: activeTab === 'youtube' ? '0 4px 15px rgba(255, 0, 0, 0.4)' : 'none'
             }}
           >
-            <Youtube size={18} />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
             <span>YOUTUBE</span>
           </button>
         </div>
@@ -162,7 +158,7 @@ export default function App() {
             marginBottom: '12px',
             color: activeTab === 'instagram' ? '#fb7185' : '#f87171'
           }}>
-            <Sparkles size={16} /> FAST & HIGH QUALITY
+            ✦ FAST & HIGH QUALITY
           </div>
 
           <h1 style={{
@@ -217,11 +213,13 @@ export default function App() {
                   boxSizing: 'border-box'
                 }}
               />
-              {activeTab === 'instagram' ? (
-                <Instagram size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#f43f5e' }} />
-              ) : (
-                <Youtube size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#ef4444' }} />
-              )}
+              <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', display: 'flex' }}>
+                {activeTab === 'instagram' ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><polygon points="10 15 15 12 10 9 10 15"/></svg>
+                )}
+              </span>
             </div>
 
             <button
@@ -247,7 +245,11 @@ export default function App() {
                   : '0 10px 20px -5px rgba(239, 68, 68, 0.4)'
               }}
             >
-              {loading ? <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={20} /> : <Download size={20} />}
+              {loading ? (
+                <svg className="spin-loader" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              )}
               {loading ? 'Processing Video...' : `Fetch ${activeTab === 'instagram' ? 'Reel' : 'Video'}`}
             </button>
           </form>
@@ -265,7 +267,7 @@ export default function App() {
               gap: '8px',
               fontSize: '13px'
             }}>
-              <AlertCircle size={18} color="#ef4444" />
+              <span>⚠️</span>
               <span>{error}</span>
             </div>
           )}
@@ -289,7 +291,7 @@ export default function App() {
             textAlign: 'center',
             boxSizing: 'border-box'
           }}>
-            <Loader2 size={36} color={activeTab === 'instagram' ? '#ec4899' : '#ef4444'} style={{ animation: 'spin 1s linear infinite' }} />
+            <svg className="spin-loader" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={activeTab === 'instagram' ? '#ec4899' : '#ef4444'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
             <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 600 }}>Fetching video details...</span>
             <span style={{ fontSize: '12px', color: '#64748b' }}>Please wait a moment</span>
           </div>
@@ -313,7 +315,7 @@ export default function App() {
             boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#4ade80', fontSize: '13px', fontWeight: 600 }}>
-              <CheckCircle2 size={16} /> Video Found!
+              ✓ Video Found!
             </div>
 
             <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '320px' }}>
@@ -358,7 +360,11 @@ export default function App() {
                 boxShadow: '0 8px 18px -4px rgba(16, 185, 129, 0.4)'
               }}
             >
-              {downloading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Download size={18} />}
+              {downloading ? (
+                <svg className="spin-loader" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              )}
               {downloading ? 'Downloading...' : 'Download MP4 Video'}
             </button>
           </div>
@@ -391,7 +397,7 @@ export default function App() {
             onClick={() => setActiveModal('guide')}
             style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
-            <HelpCircle size={15} color="#38bdf8" /> How to use
+            📖 How to use
           </button>
 
           <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
@@ -400,7 +406,7 @@ export default function App() {
             onClick={() => setActiveModal('faq')}
             style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
-            <MessageCircleQuestion size={15} color="#a78bfa" /> FAQ
+            ❓ FAQ
           </button>
 
           <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
@@ -409,7 +415,7 @@ export default function App() {
             onClick={() => setActiveModal('contact')}
             style={{ background: 'transparent', border: 'none', color: '#cbd5e1', fontSize: '13px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 8px' }}
           >
-            <Mail size={15} color="#f43f5e" /> Contact Support
+            ✉️ Contact Support
           </button>
         </div>
 
@@ -418,7 +424,7 @@ export default function App() {
         </p>
       </footer>
 
-      {/* Accessible Modals */}
+      {/* Modals */}
       {activeModal && (
         <div style={{
           position: 'fixed',
@@ -449,9 +455,9 @@ export default function App() {
               </h3>
               <button
                 onClick={() => setActiveModal(null)}
-                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', color: '#fff', padding: '6px', cursor: 'pointer', display: 'flex' }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', color: '#fff', padding: '6px 10px', cursor: 'pointer' }}
               >
-                <X size={16} />
+                ✕
               </button>
             </div>
 
@@ -466,47 +472,4 @@ export default function App() {
             {activeModal === 'faq' && (
               <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <strong style={{ color: '#fff' }}>What formats are supported?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Instagram Reels, YouTube regular videos, and YouTube Shorts.</p>
-                </div>
-                <div>
-                  <strong style={{ color: '#fff' }}>Is it completely free?</strong>
-                  <p style={{ margin: '2px 0 0 0', color: '#94a3b8' }}>Yes, unlimited downloads with no sign-up required.</p>
-                </div>
-              </div>
-            )}
-
-            {activeModal === 'contact' && (
-              <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <p style={{ margin: 0 }}>Encountering an issue or have feedback?</p>
-                <div style={{ background: '#0f172a', padding: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '12px' }}>Developer Support</span>
-                  <a 
-                    href="mailto:karthiksharan208@gmail.com" 
-                    style={{ color: '#38bdf8', fontWeight: 'bold', marginTop: '4px', display: 'block', textDecoration: 'none' }}
-                  >
-                    karthiksharan208@gmail.com
-                  </a>
-                </div>
-                <button
-                  onClick={() => setActiveModal(null)}
-                  style={{
-                    marginTop: '6px',
-                    padding: '10px',
-                    borderRadius: '10px',
-                    background: '#334155',
-                    border: 'none',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-   
+                  <strong style={{ color: '#fff' }}>What formats are supporte

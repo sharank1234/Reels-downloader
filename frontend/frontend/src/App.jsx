@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { 
-  Download, Loader2, Sparkles, Instagram, PlayCircle, 
+  Download, Loader2, Sparkles, Instagram, 
   AlertCircle, CheckCircle2, HelpCircle, Mail, MessageCircleQuestion, X
 } from 'lucide-react'
 
@@ -9,11 +9,12 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [downloading, setDownloading] = useState(false)
   
   // Modal states: 'faq' | 'contact' | 'guide' | null
   const [activeModal, setActiveModal] = useState(null)
 
-  const handleDownload = async (e) => {
+  const handleFetch = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -37,6 +38,28 @@ export default function App() {
     }
   }
 
+  const handleDownloadFile = async () => {
+    if (!result || !result.video_url) return
+    setDownloading(true)
+    try {
+      const response = await fetch(result.video_url)
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = `${result.title || 'instagram_reel'}.mp4`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (err) {
+      // Fallback if CORS blocks blob download
+      window.open(result.video_url, '_blank')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -51,7 +74,7 @@ export default function App() {
       boxSizing: 'border-box'
     }}>
       
-      {/* Main Content Area */}
+      {/* Header & Main Form Area */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
         {/* Glow Header */}
@@ -101,7 +124,7 @@ export default function App() {
           boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6)'
         }}>
           
-          <form onSubmit={handleDownload} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ position: 'relative', width: '100%' }}>
               <input
                 type="text"
@@ -143,7 +166,7 @@ export default function App() {
                 boxShadow: '0 10px 20px -5px rgba(236, 72, 153, 0.4)'
               }}
             >
-              {loading ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+              {loading ? <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={20} /> : <Download size={20} />}
               {loading ? 'Processing Video...' : 'Fetch Reel'}
             </button>
           </form>
@@ -166,61 +189,108 @@ export default function App() {
               <span>{error}</span>
             </div>
           )}
-
-          {/* Download Output */}
-          {result && (
-            <div style={{
-              marginTop: '20px',
-              paddingTop: '18px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#4ade80', fontSize: '13px', fontWeight: 600 }}>
-                <CheckCircle2 size={16} /> Ready to Download!
-              </div>
-
-              {result.thumbnail && (
-                <div style={{ position: 'relative', borderRadius: '14px', overflow: 'hidden', maxHeight: '240px' }}>
-                  <img src={result.thumbnail} alt="Thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <PlayCircle size={44} color="#ffffff" />
-                  </div>
-                </div>
-              )}
-
-              <a
-                href={result.video_url}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  padding: '12px 20px',
-                  background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
-                  color: '#ffffff',
-                  textDecoration: 'none',
-                  borderRadius: '12px',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  boxShadow: '0 8px 18px -4px rgba(16, 185, 129, 0.4)'
-                }}
-              >
-                <Download size={16} /> Save MP4 Video
-              </a>
-            </div>
-          )}
-
         </div>
+
+        {/* LOADING STATE in marked area */}
+        {loading && (
+          <div style={{
+            marginTop: '20px',
+            maxWidth: '480px',
+            width: '100%',
+            background: 'rgba(30, 41, 59, 0.5)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            padding: '36px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '14px',
+            textAlign: 'center',
+            boxSizing: 'border-box'
+          }}>
+            <Loader2 size={36} color="#ec4899" style={{ animation: 'spin 1s linear infinite' }} />
+            <span style={{ fontSize: '15px', color: '#cbd5e1', fontWeight: 600 }}>Fetching video from Instagram...</span>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Please wait a few seconds</span>
+          </div>
+        )}
+
+        {/* VIDEO DISPLAY & DOWNLOAD AREA (Marked area) */}
+        {result && (
+          <div style={{
+            marginTop: '20px',
+            maxWidth: '480px',
+            width: '100%',
+            background: 'rgba(30, 41, 59, 0.75)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '24px',
+            padding: '20px',
+            boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '14px',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#4ade80', fontSize: '13px', fontWeight: 600 }}>
+              <CheckCircle2 size={16} /> Video Found!
+            </div>
+
+            {/* Video Player */}
+            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '340px' }}>
+              <video
+                src={result.video_url}
+                poster={result.thumbnail}
+                controls
+                playsInline
+                style={{ width: '100%', maxHeight: '340px', objectFit: 'contain' }}
+              />
+            </div>
+
+            <p style={{
+              fontSize: '14px',
+              color: '#cbd5e1',
+              fontWeight: 500,
+              margin: 0,
+              textAlign: 'center',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {result.title || 'Instagram Reel'}
+            </p>
+
+            {/* Direct Download Action Button */}
+            <button
+              onClick={handleDownloadFile}
+              disabled={downloading}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '14px 20px',
+                background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '14px',
+                fontWeight: 700,
+                fontSize: '15px',
+                cursor: downloading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 8px 18px -4px rgba(16, 185, 129, 0.4)'
+              }}
+            >
+              {downloading ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Download size={18} />}
+              {downloading ? 'Downloading...' : 'Download MP4 Video'}
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Accessible Footer Help Tools */}
       <footer style={{
-        marginTop: '40px',
+        marginTop: '36px',
         width: '100%',
         maxWidth: '520px',
         display: 'flex',
@@ -345,7 +415,7 @@ export default function App() {
               <div style={{ fontSize: '14px', color: '#cbd5e1', lineHeight: '1.6', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div><strong>1. Copy Reel URL:</strong> Open Instagram, tap the Share icon on any reel, and tap <em>Copy link</em>.</div>
                 <div><strong>2. Paste & Fetch:</strong> Paste the link in the input box above and tap <em>Fetch Reel</em>.</div>
-                <div><strong>3. Save Video:</strong> Tap the green <em>Save MP4 Video</em> button to download it directly to your device.</div>
+                <div><strong>3. Preview & Save:</strong> Watch the preview and tap <em>Download MP4 Video</em> to save it to your device.</div>
               </div>
             )}
 
@@ -400,7 +470,14 @@ export default function App() {
         </div>
       )}
 
+      {/* Global CSS for spinner animation */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
     </div>
   )
-          }
-                
+}

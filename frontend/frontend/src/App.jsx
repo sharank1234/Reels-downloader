@@ -142,7 +142,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* Dynamic Header */}
+        {/* Dynamic Title Header */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             display: 'inline-flex',
@@ -472,4 +472,4 @@ export default function App() {
             {activeModal === 'faq' && (
               <div style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: '1.5', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
-                  <strong style={{ color: '#fff' }}>What formats are supported?
+                  <strong style={{ color: '#fff' }}>What formats are supp

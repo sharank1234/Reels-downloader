@@ -27,37 +27,31 @@ def download_media(req: DownloadRequest):
     url = req.url.strip()
     is_youtube = bool(re.search(r'(youtube\.com|youtu\.be)', url))
 
-    # --- YouTube Engine (Direct Public Gateway) ---
+    # --- 1. YOUTUBE ENGINE (Multi-Mirror Stream Resolver) ---
     if is_youtube:
-        # Extract clean video ID
         vid_match = re.search(r'(?:v=|\/|shorts\/|youtu\.be\/)([0-9A-Za-z_-]{11})', url)
         if not vid_match:
-            raise HTTPException(status_code=400, detail="Invalid YouTube URL format.")
+            raise HTTPException(status_code=400, detail="Invalid YouTube link format.")
         
         video_id = vid_match.group(1)
         clean_url = f"https://www.youtube.com/watch?v={video_id}"
 
-        apis = [
+        # Method A: Cobalt Modern V10 Endpoints
+        cobalt_endpoints = [
             "https://api.cobalt.tools",
-            "https://cobalt-api.kwiatekm.tokyo",
-            "https://api.wuk.sh"
+            "https://cobalt.api.kwiatekm.tokyo",
+            "https://cobalt-api.hyper.lol"
         ]
-
-        for base_api in apis:
+        for ep in cobalt_endpoints:
             try:
                 res = requests.post(
-                    f"{base_api}/api/json",
+                    ep,
                     headers={
                         "Accept": "application/json",
-                        "Content-Type": "application/json",
-                        "User-Agent": "Mozilla/5.0"
+                        "Content-Type": "application/json"
                     },
-                    json={
-                        "url": clean_url,
-                        "vQuality": "720",
-                        "filenamePattern": "basic"
-                    },
-                    timeout=8
+                    json={"url": clean_url},
+                    timeout=5
                 )
                 if res.status_code == 200:
                     data = res.json()
@@ -71,28 +65,43 @@ def download_media(req: DownloadRequest):
             except Exception:
                 continue
 
-        # Secondary Rapid Invidious stream extraction
-        try:
-            inv_res = requests.get(
-                f"https://inv.nadeko.net/api/v1/videos/{video_id}",
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=8
-            )
-            if inv_res.status_code == 200:
-                inv_data = inv_res.json()
-                formats = inv_data.get("formatStreams", [])
-                if formats:
-                    return {
-                        "video_url": formats[-1].get("url"),
-                        "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
-                        "title": inv_data.get("title", "YouTube Video")
-                    }
-        except Exception:
-            pass
+        # Method B: Piped & Invidious Direct Stream Mirrors
+        stream_mirrors = [
+            f"https://pipedapi.kavin.rocks/streams/{video_id}",
+            f"https://api.piped.privacy.com.de/streams/{video_id}",
+            f"https://invidious.nerdvpn.de/api/v1/videos/{video_id}",
+            f"https://invidious.jing.rocks/api/v1/videos/{video_id}"
+        ]
+        for mirror in stream_mirrors:
+            try:
+                res = requests.get(mirror, headers={"User-Agent": "Mozilla/5.0"}, timeout=5)
+                if res.status_code == 200:
+                    data = res.json()
+                    
+                    # Piped format check
+                    video_streams = data.get("videoStreams", [])
+                    for stream in reversed(video_streams):
+                        if stream.get("url") and stream.get("format") == "MPEG_4" and not stream.get("videoOnly"):
+                            return {
+                                "video_url": stream.get("url"),
+                                "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+                                "title": data.get("title", "YouTube Video")
+                            }
+                    
+                    # Invidious format check
+                    format_streams = data.get("formatStreams", [])
+                    if format_streams:
+                        return {
+                            "video_url": format_streams[-1].get("url"),
+                            "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
+                            "title": data.get("title", "YouTube Video")
+                        }
+            except Exception:
+                continue
 
-        raise HTTPException(status_code=400, detail="YouTube stream is busy. Please retry in a few seconds.")
+        raise HTTPException(status_code=400, detail="Unable to extract YouTube video. Please try again.")
 
-    # --- Instagram Engine (yt-dlp works cleanly for Instagram) ---
+    # --- 2. INSTAGRAM ENGINE (yt-dlp) ---
     ydl_opts = {
         'format': 'best',
         'quiet': True,
@@ -112,7 +121,7 @@ def download_media(req: DownloadRequest):
                         break
 
             if not video_url:
-                raise HTTPException(status_code=400, detail="Unable to extract video stream.")
+                raise HTTPException(status_code=400, detail="Unable to extract Instagram reel.")
 
             return {
                 "video_url": video_url,
@@ -121,4 +130,3 @@ def download_media(req: DownloadRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-        

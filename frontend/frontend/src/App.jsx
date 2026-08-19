@@ -18,6 +18,19 @@ export default function App() {
     setError('')
   }
 
+  // 1-Tap Paste from Clipboard
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (text) {
+        setUrl(text.trim())
+        setError('')
+      }
+    } catch (err) {
+      setError('Clipboard permission required to auto-paste.')
+    }
+  }
+
   const handleFetch = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -92,17 +105,76 @@ export default function App() {
           </p>
         </div>
 
-        {/* Input Form */}
+        {/* Input Form with Integrated Paste Button */}
         <div style={{ width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px', boxSizing: 'border-box' }}>
-          <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <input 
-              type="text" 
-              placeholder={activeTab === 'instagram' ? 'Paste Instagram link...' : 'Paste YouTube link...'} 
-              value={url} 
-              onChange={(e) => setUrl(e.target.value)} 
-              required 
-              style={{ width: '100%', padding: '12px 14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }} 
-            />
+          <form onSubmit={handleFetch} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            
+            {/* Input & Paste Button Container */}
+            <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                placeholder={activeTab === 'instagram' ? 'Paste Instagram link...' : 'Paste YouTube link...'} 
+                value={url} 
+                onChange={(e) => setUrl(e.target.value)} 
+                required 
+                style={{ 
+                  width: '100%', 
+                  padding: '12px 90px 12px 14px', 
+                  borderRadius: '12px', 
+                  border: '1px solid rgba(255,255,255,0.15)', 
+                  background: 'rgba(15,23,42,0.8)', 
+                  color: '#fff', 
+                  fontSize: '14px', 
+                  outline: 'none', 
+                  boxSizing: 'border-box' 
+                }} 
+              />
+              
+              {/* Paste / Clear Action Button */}
+              {url ? (
+                <button
+                  type="button"
+                  onClick={() => setUrl('')}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.12)',
+                    color: '#cbd5e1',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear ✕
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePaste}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'rgba(255,255,255,0.08)',
+                    color: '#38bdf8',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  📋 Paste
+                </button>
+              )}
+            </div>
+
             <button 
               type="submit" 
               disabled={loading} 
@@ -122,7 +194,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Media Preview & Download Area */}
+        {/* Media Preview & Download */}
         {result && (
           <div style={{ marginTop: '20px', width: '100%', background: 'rgba(30,41,59,0.75)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
             <div style={{ color: '#4ade80', fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>✓ Ready for Download</div>
@@ -222,7 +294,7 @@ export default function App() {
 
       </div>
 
-      {/* Footer Navigation */}
+      {/* Footer Modal Controls */}
       <footer style={{ marginTop: '30px', width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
         <div style={{ display: 'flex', gap: '14px', background: 'rgba(15,23,42,0.6)', padding: '6px 16px', borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' }}>
           <button onClick={() => setActiveModal('guide')} style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer' }}>📖 Guide</button>

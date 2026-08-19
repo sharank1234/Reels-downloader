@@ -24,13 +24,13 @@ class DownloadRequest(BaseModel):
 def read_root():
     return {"status": "Backend is live"}
 
-# Dedicated Image Proxy to bypass Instagram CDN blocking
+# Dedicated Image/Audio Proxy
 @app.get("/api/proxy-image")
 def proxy_image(img_url: str = Query(...)):
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "*/*"
         }
         res = requests.get(img_url, headers=headers, stream=True, timeout=10)
         if res.status_code == 200:
@@ -39,7 +39,7 @@ def proxy_image(img_url: str = Query(...)):
                 media_type="image/jpeg",
                 headers={"Cache-Control": "public, max-age=86400"}
             )
-        raise HTTPException(status_code=400, detail="Failed to fetch image stream.")
+        raise HTTPException(status_code=400, detail="Failed to fetch stream.")
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -57,10 +57,10 @@ def download_media(req: DownloadRequest):
 
     shortcode = extract_instagram_shortcode(url)
 
-    # 1. Instagram Embed Method (Fast & High Reliability)
+    # 1. Instagram Embed Method (Fast Video & Photo Extractor)
     if shortcode:
         headers = {
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15",
             "Accept": "*/*",
         }
         try:
@@ -69,23 +69,25 @@ def download_media(req: DownloadRequest):
             if resp.status_code == 200:
                 html = resp.text
                 
-                # Check for Video
+                # Check for Video / Reel
                 video_match = re.search(r'video_url\\":\\"([^"\\]+)', html) or re.search(r'"video_url":"([^"]+)"', html)
                 if video_match:
                     clean_video_url = video_match.group(1).replace('\\u0026', '&').replace('\\/', '/')
                     return {
                         "media_url": clean_video_url,
+                        "audio_url": clean_video_url, # MP4 contains the native audio track
                         "media_type": "video",
                         "thumbnail": "",
-                        "title": "Instagram Video"
+                        "title": "Instagram Media"
                     }
 
-                # Check for Image
+                # Check for Photo
                 img_match = re.search(r'display_url\\":\\"([^"\\]+)', html) or re.search(r'"display_url":"([^"]+)"', html)
                 if img_match:
                     clean_img_url = img_match.group(1).replace('\\u0026', '&').replace('\\/', '/')
                     return {
                         "media_url": clean_img_url,
+                        "audio_url": None,
                         "media_type": "image",
                         "thumbnail": clean_img_url,
                         "title": "Instagram Photo"
@@ -106,12 +108,16 @@ def download_media(req: DownloadRequest):
             info = ydl.extract_info(url, download=False)
             media_url = info.get('url')
             media_type = 'video'
+            audio_url = None
 
             if not media_url and 'formats' in info:
                 for f in reversed(info['formats']):
                     if f.get('url'):
                         media_url = f.get('url')
                         break
+
+            if media_url:
+                audio_url = media_url
 
             if not media_url and info.get('thumbnail'):
                 media_url = info.get('thumbnail')
@@ -122,6 +128,7 @@ def download_media(req: DownloadRequest):
 
             return {
                 "media_url": media_url,
+                "audio_url": audio_url,
                 "media_type": media_type,
                 "thumbnail": info.get('thumbnail', ''),
                 "title": info.get('title', 'Instagram Media')

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import yt_dlp
+import html
 import re
 import io
 
@@ -56,82 +57,109 @@ def download_media(req: DownloadRequest):
         raise HTTPException(status_code=400, detail="YouTube downloader is in development.")
 
     shortcode = extract_instagram_shortcode(url)
+    is_reel_link = bool(re.search(r'(?:reel|reels)\/', url))
 
-    # 1. Instagram Embed Method (Fast Video & Photo Extractor)
+    # --- Strategy 1: Instagram Embed Scraper with Full Entity Decoding ---
     if shortcode:
         headers = {
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15",
-            "Accept": "*/*",
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
         }
         try:
             embed_url = f"https://www.instagram.com/p/{shortcode}/embed/captioned/"
             resp = requests.get(embed_url, headers=headers, timeout=8)
             if resp.status_code == 200:
-                html = resp.text
-                
-                # Check for Video / Reel
-                video_match = re.search(r'video_url\\":\\"([^"\\]+)', html) or re.search(r'"video_url":"([^"]+)"', html)
-                if video_match:
-                    clean_video_url = video_match.group(1).replace('\\u0026', '&').replace('\\/', '/')
+                raw_html = resp.text
+                # Decode all HTML entities (&quot;, &#x2F;, etc.)
+                clean_text = html.unescape(raw_html)
+
+                # Look for video URL patterns
+                video_patterns = [
+                    r'video_url[\"\']\s*:\s*[\"\']([^\"\']+)[\"\']',
+                    r'class=[\"\']EmbeddedVideo[\"\'][^>]*src=[\"\']([^\"\']+)[\"\']',
+                    r'<video[^>]+src=[\"\']([^\"\']+)[\"\']',
+                    r'video_url\\":\\"([^"\\]+)\\"'
+                ]
+
+                video_url = None
+                for pattern in video_patterns:
+                    match = re.search(pattern, clean_text) or re.search(pattern, raw_html)
+                    if match:
+                        candidate = match.group(1).replace('\\/', '/').replace('\\u0026', '&').replace('&amp;', '&')
+                        if candidate.startswith('http'):
+                            video_url = candidate
+                            break
+
+                if video_url:
                     return {
-                        "media_url": clean_video_url,
-                        "audio_url": clean_video_url, # MP4 contains the native audio track
+                        "media_url": video_url,
+                        "audio_url": video_url,
                         "media_type": "video",
                         "thumbnail": "",
-                        "title": "Instagram Media"
+                        "title": "Instagram Reel"
                     }
 
-                # Check for Photo
-                img_match = re.search(r'display_url\\":\\"([^"\\]+)', html) or re.search(r'"display_url":"([^"]+)"', html)
-                if img_match:
-                    clean_img_url = img_match.group(1).replace('\\u0026', '&').replace('\\/', '/')
-                    return {
-                        "media_url": clean_img_url,
-                        "audio_url": None,
-                        "media_type": "image",
-                        "thumbnail": clean_img_url,
-                        "title": "Instagram Photo"
-                    }
+                # If it is strictly a photo post and NOT a reel link
+                if not is_reel_link:
+                    img_patterns = [
+                        r'display_url[\"\']\s*:\s*[\"\']([^\"\']+)[\"\']',
+                        r'class=[\"\']EmbeddedMediaImage[\"\'][^>]*src=[\"\']([^\"\']+)[\"\']',
+                        r'<img[^>]+class=[\"\'][^\"\']*EmbeddedMediaImage[^\"\']*[\"\'][^>]+src=[\"\']([^\"\']+)[\"\']',
+                        r'display_url\\":\\"([^"\\]+)\\"'
+                    ]
+                    for pattern in img_patterns:
+                        match = re.search(pattern, clean_text) or re.search(pattern, raw_html)
+                        if match:
+                            candidate = match.group(1).replace('\\/', '/').replace('\\u0026', '&').replace('&amp;', '&')
+                            if candidate.startswith('http'):
+                                return {
+                                    "media_url": candidate,
+                                    "audio_url": None,
+                                    "media_type": "image",
+                                    "thumbnail": candidate,
+                                    "title": "Instagram Photo"
+                                }
         except Exception:
             pass
 
-    # 2. yt-dlp Extractor
+    # --- Strategy 2: yt-dlp Extractor ---
     ydl_opts = {
-        'format': 'best',
+        'format': 'bestvideo+bestaudio/best',
         'quiet': True,
         'no_warnings': True,
-        'noplaylist': True
+        'noplaylist': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             media_url = info.get('url')
-            media_type = 'video'
-            audio_url = None
+            media_type = 'video' if is_reel_link else 'image'
 
             if not media_url and 'formats' in info:
                 for f in reversed(info['formats']):
-                    if f.get('url'):
+                    if f.get('vcodec') != 'none' and f.get('url'):
                         media_url = f.get('url')
+                        media_type = 'video'
                         break
 
-            if media_url:
-                audio_url = media_url
-
-            if not media_url and info.get('thumbnail'):
+            if not media_url and info.get('thumbnail') and not is_reel_link:
                 media_url = info.get('thumbnail')
                 media_type = 'image'
 
             if not media_url:
-                raise HTTPException(status_code=400, detail="Could not extract media.")
+                raise HTTPException(status_code=400, detail="Could not extract media stream.")
 
             return {
                 "media_url": media_url,
-                "audio_url": audio_url,
+                "audio_url": media_url if media_type == 'video' else None,
                 "media_type": media_type,
                 "thumbnail": info.get('thumbnail', ''),
                 "title": info.get('title', 'Instagram Media')
             }
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Instagram rate limit hit. Please retry in a moment.")
+        raise HTTPException(status_code=400, detail="Unable to fetch Reel. Please check link or retry.")
